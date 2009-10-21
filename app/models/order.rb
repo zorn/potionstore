@@ -58,6 +58,12 @@ class Order < ActiveRecord::Base
     end
   end
 
+  def before_create
+    if self.order_number == nil || self.order_number.empty?
+      self.order_number = self.generate_order_number()
+    end
+  end
+
   def total
     return round_money(total_before_applying_coupons() - coupon_amount())
   end
@@ -536,5 +542,50 @@ class Order < ActiveRecord::Base
     command.google_order_number = self.transaction_number
     command.send_to_google_checkout() rescue nil
   end
+
+  @@encodeMap = [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R',
+'S', 'T', 'V', 'W', 'X', 'Z' ]
+
+  def encode_number(number)
+    base = @@encodeMap.length
+    encodedString = ""
+    while number > 0
+      remainder = number % base
+      encodedString = @@encodeMap[remainder] + encodedString
+
+       number = ((number - remainder).divmod(base))[0]
+    end
+
+    return encodedString
+  end
+
+  def generate_order_number
+    time = self.order_time
+
+    timestring = "%10.5f" % time.to_f
+    timestring.sub!(/\./, "")
+
+    # Convert to our own brand of base 30
+    id = encode_number(timestring.to_i)
+
+    # Add random bit at end in the very unlikely event that two orders
+    # have the same order time (to microsecond accuracy)
+
+    # With base 30, we want to generate two digits. So 30^2
+    max = @@encodeMap.length * @@encodeMap.length
+
+    # Note that it's 3 digits in decimal
+    randSalt = encode_number(rand(max))
+
+    while randSalt.length < 2
+      randSalt = "0" + randSalt
+    end
+
+    id += randSalt
+
+    return id
+  end
+
 end
 
