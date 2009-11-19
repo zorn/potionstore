@@ -157,7 +157,11 @@ class AdminController < ApplicationController
         coupon.code = form[:code]
         coupon.product_code = form[:product_code]
         coupon.description = form[:description]
-        coupon.amount = form[:amount]
+        if form[:amount][-1, 1] == '%'
+          coupon.percentage = form[:amount][0..-1]
+        else
+          coupon.amount = form[:amount]
+        end
         coupon.use_limit = form[:use_limit]
         coupon.save()
         @coupons << coupon
