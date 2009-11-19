@@ -1,0 +1,9 @@
+<h1>Import Orders</h1>
+
+<h2>eSellerate</h2>
+<% form_tag({:controller => "/admin", :action => "import"}, {:multipart => true}) do -%>
+<p><label for="esellerate_order_file">Choose the daily summary file you would like to import:</label></p>
+<p><%= file_field_tag "esellerate_order_file" %></p>
+<%= render :partial => "esellerate_sku_map", :collection => @products %>
+<p><%= submit_tag nil %></p>
+<% end -%>

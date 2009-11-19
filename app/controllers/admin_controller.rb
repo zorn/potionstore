@@ -1,3 +1,5 @@
+require 'csv'
+
 class AdminController < ApplicationController
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
   verify :method => :post, :only => [ :destroy, :create, :update ],
@@ -77,6 +79,57 @@ class AdminController < ApplicationController
     @type = "12 Month"
     @chart = OpenFlashChart.swf_object(500, 170, '/admin/charts/revenue_history_months')
     render :partial =>  "revenue_history"
+  end
+
+  #BEW Added new methods for importing eSellerate data
+  def importRow(row, headerRow, sku_map)
+  	result = nil
+    if row.length == headerRow.length
+	  rowHash = {}
+	  for i in 0..row.length
+	  	rowHash[headerRow[i]] = row[i]
+	  end
+	  if rowHash["TRAN_TYPE"] == "ORDER"
+		productID = sku_map[rowHash["SKU"]]
+		if (productID != nil)
+			newOrder = Order.find_or_create_by_order_number(rowHash["ORDER_NUMBER"])
+			newOrder.payment_type = "eSellerate"
+			newOrder.first_name = rowHash["FIRST_NAME"]
+			newOrder.last_name = rowHash["LAST_NAME"]
+			newOrder.licensee_name = rowHash["REGISTRATION_NAME"]
+			newOrder.company = rowHash["COMPANY"]
+			newOrder.address1 = rowHash["ADDRESS1"]
+			newOrder.address2 = rowHash["ADDRESS2"]
+			newOrder.city = rowHash["CITY"]
+			newOrder.state = rowHash["STATE"]
+			newOrder.zipcode = rowHash["POSTAL"]
+			newOrder.country = country_code(rowHash["COUNTRY"]) or rowHash["COUNTRY"]
+			newOrder.email = rowHash["EMAIL"]
+			newOrder.order_time = Date.parse(rowHash["TRAN_DATE"], true)
+			newOrder.status = 'C'
+			lineItem = LineItem.new({:order => newOrder,:product_id => productID})
+			lineItem.unit_price = rowHash["UNIT_PRICE"].to_f
+			lineItem.quantity = rowHash["QUANTITY"].to_i
+			lineItem.license_key = rowHash["SERIAL_NUMBER"]
+			newOrder.line_items << lineItem
+			newOrder.save()
+			ListSubscriber.create(:email => rowHash["EMAIL"]) if (rowHash["CONTACT_ME"] == "1")
+			result = newOrder
+		end
+	  end
+	end
+	result
+  end
+  
+  def import
+  	@products = Product.find(:all)
+  	if params["esellerate_order_file"] != nil
+  	  sku_map = {}
+  	  (params.select { |key, value| key.match("sku_[0-9]+") }).each { |order_key, order_sku| sku_map[order_sku] = order_key[4..-1].to_i }
+	  reader = CSV::IOReader.new(params["esellerate_order_file"])
+	  headerRow = reader.shift
+	  reader.each{|row| importRow(row, headerRow, sku_map)}
+	end
   end
 
   # Coupon actions
@@ -267,3 +320,13 @@ class AdminController < ApplicationController
   end
 
 end
+require 'csv'
+
+require 'csv'
+
+require 'csv'
+
+require 'csv'
+
+require 'csv'
+

@@ -4,6 +4,7 @@ def load_country_names()
   config_dir = app_root + '/config/'
   ymlpath = File.expand_path(config_dir + 'countries.yml')
   $COUNTRY_NAMES = YAML.load(File.open(ymlpath))
+  $COUNTRY_CODES = $COUNTRY_NAMES.invert
 end
 
 load_country_names()
@@ -11,6 +12,10 @@ load_country_names()
 # I know it's not good to make this method global, but I can't get the thankyou_plain.rhtml template to call it otherwise
 def country_name(country_code)
   return $COUNTRY_NAMES[country_code]
+end
+
+def country_code(country_name)
+  return $COUNTRY_CODES[country_name]
 end
 
 module ApplicationHelper

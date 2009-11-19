@@ -162,13 +162,15 @@ class Order < ActiveRecord::Base
         val = type.capitalize()
       elsif type.downcase() == 'mastercard'
         val = 'MasterCard'
+      elsif type.downcase() == 'esellerate'
+        val = 'eSellerate'
       end
     end
     write_attribute(:payment_type, val)
   end
 
   def cc_order?
-    return self.payment_type != nil && ['visa', 'mastercard', 'amex', 'discover'].member?(self.payment_type.downcase)
+    return self.payment_type != nil && ['visa', 'mastercard', 'amex', 'discover', 'esellerate'].member?(self.payment_type.downcase)
   end
 
   def paypal_order?

@@ -16,6 +16,7 @@
         <li><%= link_to("Add Order", {:controller => "admin/orders", :action => "new"}, {:accesskey => "3"}) %></li>
         <li><%= link_to("Add Coupons", {:controller => "/admin", :action => "generate_coupons"}, {:accesskey => "4"}) %></li>
         <li><%= link_to("Products", {:controller => "admin/products", :action => "index"}, {:accesskey => "5"}) %></li>
+        <li><%= link_to("Import Orders", {:controller => "/admin", :action => "import"}, {:accesskey => "6"}) %></li>
         <li id="search">
             <% form_tag({:controller => "admin/orders", :action => "index"}, {:method => "GET"}) do -%>
             <%= text_field_tag("query", nil, {:accesskey => "S"}) %>
