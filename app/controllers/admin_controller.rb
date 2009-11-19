@@ -132,6 +132,21 @@ class AdminController < ApplicationController
 	end
   end
 
+  def download
+    if params[:startDate] != nil && params[:endDate] != nil
+      buffer = StringIO.new()
+      orderList = Order.find(:all, :conditions => "status = 'C' AND payment_type != 'Free' AND order_time >= '#{params[:startDate]} 00:00:00' AND order_time <= '#{params[:endDate]} 23:59:59'")
+      csv = CSV::Writer.create(buffer)
+      for order in orderList
+        for item in order.line_items
+          itemData = [order.order_time.strftime("%m/%d/%Y"), order.order_number, item.total.to_s, (item.net_total - item.total).to_s, item.net_total.to_s, Product.find(item.product_id).name, order.licensee_name, order.email, (item.product_id == 2 ? item.quantity : 0).to_s, (item.product_id == 1 ? item.quantity : 0).to_s, (item.product_id == 3 ? item.quantity : 0).to_s]
+          csv << itemData
+        end
+      end
+      send_data(buffer.string, {:filename => "TransactionLedger.csv", :disposition => "attachment", :type => "application/text"})
+    end
+  end
+
   # Coupon actions
   def generate_coupons
     if params[:form]
